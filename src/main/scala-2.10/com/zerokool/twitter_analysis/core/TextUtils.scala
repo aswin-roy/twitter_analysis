@@ -26,7 +26,6 @@ class TextUtils {
 
     words.foreach(word => {
       if(!word.isEmpty && !isStopWord(word)) {
-        //        newSentence = newSentence.concat(word).concat(" ")
         filteredWordSet += word
       }
     })
