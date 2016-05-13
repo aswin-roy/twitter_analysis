@@ -1,7 +1,7 @@
 package com.zerokool.twitter_analysis.constants
 
 /**
-  * Created by aswin on 13/5/16.
+  * Constants class
   */
 object Constants {
 

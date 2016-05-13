@@ -8,7 +8,7 @@ import org.apache.commons.httpclient.util.URIUtil
 import org.codehaus.jettison.json
 
 /**
-  * Created by aswin on 8/5/16.
+  * Geo location util class
   */
 class GeoUtils {
 

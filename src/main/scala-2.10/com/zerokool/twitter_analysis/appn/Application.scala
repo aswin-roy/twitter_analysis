@@ -12,7 +12,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
-  * Created by aswin on 6/5/16.
+  * Main class
   */
 object Application {
 
