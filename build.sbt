@@ -2,13 +2,13 @@ import sbtassembly.Plugin.AssemblyKeys._
 
 assemblySettings
 
-name := "twitter_test"
+name := "twitter_analysis"
 
 version := "1.0"
 
 scalaVersion := "2.10.4"
 
-mainClass in assembly := Some("com.twitter.ista.appn.Application")
+mainClass in assembly := Some("com.zerokool.twitter_analysis.appn.Application")
 
 libraryDependencies ++= {
   Seq(
