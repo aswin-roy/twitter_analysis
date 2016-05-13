@@ -1,4 +1,4 @@
-package com.twitter.ista.core
+package com.zerokool.twitter_analysis.core
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.net.{HttpURLConnection, URL}
@@ -20,7 +20,7 @@ class TextUtils {
     flag
   }
 
-  def removeStopWords(sentence:String): String = {
+  def removeStopWords(sentence:String): Unit = {
     val words = sentence.split(" ")
     val filteredWordSet = scala.collection.mutable.SortedSet[String]()
 
@@ -31,10 +31,10 @@ class TextUtils {
       }
     })
 
-    filteredWordSet.mkString(" ")
+    println("tweet after removing all stop-words :" + filteredWordSet.mkString(" ")) // stop-words removed
   }
 
-  def getSentiment(sentence: String): Unit ={
+  def findSentiment(sentence: String): Unit ={
     val url = new URL("http://www.sentiment140.com/api/classify?text="
       + URIUtil.encodeQuery(sentence))
     val conn = url.openConnection().asInstanceOf[HttpURLConnection]
@@ -50,9 +50,8 @@ class TextUtils {
 
     Iterator.continually(br.readLine()).takeWhile(_ ne null).foreach(s => {
       fullResult = fullResult.concat(s)
-      println(s)
     })
-    println(fullResult)
+    println(fullResult) //full json returned from sentiment140 api for the tweet
   }
 
 }

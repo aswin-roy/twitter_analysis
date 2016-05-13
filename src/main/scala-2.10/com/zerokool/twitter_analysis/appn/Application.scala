@@ -1,10 +1,10 @@
-package com.twitter.ista.appn
+package com.zerokool.twitter_analysis.appn
 
-import com.twitter.ista.core.{GeoUtils, TextUtils}
-import org.apache.spark.ml.feature.StopWordsRemover
+import com.zerokool.twitter_analysis.constants.Constants
+import com.zerokool.twitter_analysis.core.{GeoUtils, TextUtils}
 import org.apache.spark.mllib.classification.NaiveBayes
-import org.apache.spark.mllib.feature.{IDF, HashingTF}
-import org.apache.spark.mllib.linalg.{Vectors, Vector}
+import org.apache.spark.mllib.feature.{HashingTF, IDF}
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.twitter.TwitterUtils
@@ -17,38 +17,35 @@ import org.apache.spark.{SparkConf, SparkContext}
 object Application {
 
   def main(args: Array[String]) {
-    println("starting...")
     val conf = new SparkConf().setAppName("twitterIsTa")
     val sc = new SparkContext(conf)
 
     // Twitter Authentication credentials
-    System.setProperty("twitter4j.oauth.consumerKey", "gZR0Ftw9CMxkUhgDoKPAjWL8O")
-    System.setProperty("twitter4j.oauth.consumerSecret","ZQqNFA255X6dGzEZvddMkcA6FBmGpfJtTR9M4PHFjVdGJZpjYC")
-    System.setProperty("twitter4j.oauth.accessToken", "227630383-7w70plyjTE1AVLs9KaOcMeAN3dfKxlAscbVVP7mJ")
-    System.setProperty("twitter4j.oauth.accessTokenSecret", "wIhVDs2d0V64eklzI7O2gwief12kxuC910ssIeEP5PMZD")
-    println("wait...")
+    System.setProperty("twitter4j.oauth.consumerKey", Constants.CONSUMER_KEY)
+    System.setProperty("twitter4j.oauth.consumerSecret", Constants.CONSUMER_SECRET)
+    System.setProperty("twitter4j.oauth.accessToken", Constants.ACCESS_TOKEN)
+    System.setProperty("twitter4j.oauth.accessTokenSecret", Constants.ACCESS_TOKEN_SECRET)
 
     val ssc = new StreamingContext(sc, Seconds(5))
     val twitterStream = TwitterUtils.createStream(ssc, None)
 
     val statuses = twitterStream.filter(status => status.getLang.equals("en")) //filter only the english tweets
-            .map(status => (status.getText, status.getUser.getLocation))
-            .map(sentence => {
-              val textUtils = new TextUtils
-//              val geoUtils = new GeoUtils
-//              geoUtils.enrichLocationDetails(sentence._2) //enriches geo location data
-//              textUtils.getSentiment(sentence._1)
-              textUtils.removeStopWords(sentence._1)
-            })
-
-    statuses.print()
+      .map(status => {
+      val textUtils = new TextUtils
+      val geoUtils = new GeoUtils
+      geoUtils.enrichLocationDetails(status.getUser.getLocation) //enriches geo location data
+      textUtils.findSentiment(status.getText)   //finds sentiment of the tweet
+      textUtils.removeStopWords(status.getText) //removes stop-words and displays filtered words
+      status.getText
+    })
 
     statuses.foreachRDD(
       rdd => {
         if(!rdd.isEmpty()){
 
+          //training set
           val raw = sc.parallelize(Seq("I want to buy a tv,1","I want to buy a refrigerator,1",
-            "I am going home,0", "What a day,0"))
+            "sun rises in the east?,0", "What a day,0")) //training set should be ideally larger
 
           val labels = raw.map(string => {
             val parts = string.split(",")
@@ -86,16 +83,27 @@ object Application {
 
           val model = NaiveBayes.train(training, lambda = 1.0, modelType = "multinomial")
 
-          val p = test.map(p => (model.predict(p.features), p.label))
+          val predictions = test.map(p => (model.predict(p.features), p.label))
 
           println("prediction : ")
-          p.collect().foreach( d => {
+          predictions.collect().foreach( d => {
             println(d._1 + " : " + d._2)
           })
 
-          val accuracy = 1.0 * p.filter(x => x._1 == x._2).count() / training.count()
+          predictions.zip(rdd).foreach(
+            results => {
+              if(results._1._1 == 1) {
+                println("Tweet with buying intent : " + results._2)
+              }
+            }
+          )
 
-          println("accuracy : "+accuracy)
+          //similarly recommendation/suggestion intent can also be detected using a binary classifier,
+          // using the same steps. I am not implementing it to avoid repetition of same logic.
+
+          val accuracy = 1.0 * predictions.filter(x => x._1 == x._2).count() / training.count()
+          println("accuracy of predictions : "+accuracy)
+          //to improve accuracy, the training set has to be larger
 
         }
 

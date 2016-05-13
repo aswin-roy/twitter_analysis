@@ -1,8 +1,9 @@
-package com.twitter.ista.core
+package com.zerokool.twitter_analysis.core
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.net.{HttpURLConnection, URL}
 
+import com.zerokool.twitter_analysis.constants.Constants
 import org.apache.commons.httpclient.util.URIUtil
 import org.codehaus.jettison.json
 
@@ -13,8 +14,9 @@ class GeoUtils {
 
   def enrichLocationDetails(location: String): Unit = {
     if(location != null){
+      //the g-maps api has a limit of requests per day.
       val url = new URL("https://maps.googleapis.com/maps/api/geocode/json?address="
-        + URIUtil.encodeQuery(location) + "&key=AIzaSyCuAFGZsFIk4Z-0afRQYYHoNWYhVkJHQ9I")
+        + URIUtil.encodeQuery(location) + "&key="+ Constants.MAPS_KEY)
       val conn = url.openConnection().asInstanceOf[HttpURLConnection]
 
       conn.setRequestMethod("GET")
