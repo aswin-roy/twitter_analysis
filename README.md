@@ -1,5 +1,6 @@
 # twitter_text_analysis
 
+A spark-streaming job to analyse Twitter feed using any filter.
 
 Edit com.zerokool.twitter_analysis.constants.Constants class to add your twitter credentials and google maps key.
 
